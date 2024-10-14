@@ -8,9 +8,7 @@ from firebase_admin import credentials, firestore
 
 cred = credentials.Certificate("electric-data-bcc46-firebase-adminsdk-90nfi-09810ff75f.json")
 firebase_admin.initialize_app(cred)
-
 db = firestore.client()
-
 doc_ref = db.collection("CounterCollection").document()
 
 
@@ -25,12 +23,7 @@ def finding_digits(img):
     new_size = (width, height)
 
     # Zmiana rozmiaru obrazu
-    resized_image = cv.resize(img, new_size, interpolation=cv.INTER_AREA)
-
-    original_cropped = resized_image[300:400, 480:700]
-
-    # Utworzenie pustego obrazu
-    blank = np.zeros(original_cropped.shape[:2], "uint8")
+    original_cropped = cv.resize(img, new_size, interpolation=cv.INTER_AREA)[300:400, 480:700]
 
     # Konwersja na odcienie szarości
     gray_masked_image = cv.cvtColor(original_cropped, cv.COLOR_BGR2GRAY)
