@@ -28,7 +28,7 @@ def finding_digits(img):
     resized_image = cv.resize(img, new_size, interpolation=cv.INTER_AREA)
 
     original_cropped = resized_image[300:400, 480:700]
-    # [327:370, 585:685]
+
     # Utworzenie pustego obrazu
     blank = np.zeros(original_cropped.shape[:2], "uint8")
 
