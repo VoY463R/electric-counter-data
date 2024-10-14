@@ -1,19 +1,14 @@
-{% extends "base.html" %} {% block title %}Home - My Website{% endblock %}
+{% extends "base.html" %} 
+{% from "_render_field.html" import render_field %}
+{% block title %}Home - My Website{% endblock %}
 {%block body %}
 <h1>Zdalny odczyt licznika elektrycznego</h1>
 <form method="POST" action="{{ url_for('home')}}" novalidate>
-  {{ form.hidden_tag() }} {{ form.username.label }}: {{ form.username }} <br />
-  <ul>
-    {% for error in form.username.errors %}
-    <li style="color: red">{{error}}</li>
-    {% endfor %}
-  </ul>
-  {{ form.password.label }}: {{ form.password }}
-  <ul>
-    {% for error in form.password.errors %}
-    <li style="color: red">{{error}}</li>
-    {% endfor %}
-  </ul>
+    {{ form.hidden_tag() }} 
+
+    {{ render_field(form.username) }}
+    {{ render_field(form.password) }}
+
   {{ form.recaptcha }}
   <input type="submit" value="Submit" />
 </form>

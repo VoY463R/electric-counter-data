@@ -15,7 +15,7 @@ class LoginForm(FlaskForm):
     password = PasswordField("Password",validators=[InputRequired("A password is required!")])
     # recaptcha = RecaptchaField()
     
-@app.route('/home', methods=["POST", "GET"])
+@app.route('/', methods=["POST", "GET"])
 def home():
     form = LoginForm()
     
