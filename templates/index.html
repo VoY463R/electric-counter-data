@@ -2,7 +2,7 @@
 {% from "_render_field.html" import render_field %}
 {% block title %}Home - My Website{% endblock %}
 {%block body %}
-<h1>Zdalny odczyt licznika elektrycznego</h1>
+<h1>Zdalny odczyt licznika elektrycznego</h1> <br>
 <form method="POST" action="{{ url_for('home')}}" novalidate>
     {{ form.hidden_tag() }} 
 
@@ -10,6 +10,6 @@
     {{ render_field(form.password) }}
 
   {{ form.recaptcha }}
-  <input type="submit" value="Submit" />
+  {{ form.submit(class="btn btn-primary")}}
 </form>
 {% endblock %}

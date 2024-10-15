@@ -1,7 +1,7 @@
 from flask import Flask, render_template
 from flask_bootstrap import Bootstrap5
 from flask_wtf import FlaskForm, RecaptchaField
-from wtforms import StringField, PasswordField
+from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import InputRequired
 
 app = Flask(__name__)
@@ -13,6 +13,7 @@ app.config["SECRET_KEY"] = "163*%$uSfJLG^E"
 class LoginForm(FlaskForm):
     username = StringField("Username", validators=[InputRequired("A username is required!")])
     password = PasswordField("Password",validators=[InputRequired("A password is required!")])
+    submit = SubmitField("Submit")
     # recaptcha = RecaptchaField()
     
 @app.route('/', methods=["POST", "GET"])
