@@ -3,12 +3,31 @@ from flask_bootstrap import Bootstrap5
 from flask_wtf import FlaskForm, RecaptchaField
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import InputRequired
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 Bootstrap5(app)
 app.config['RECAPTCHA_PUBLIC_KEY'] = "6LcLVmEqAAAAAEMAeioWuCCppHqLuMRK4drkcbTx"
 app.config['RECAPTCHA_PRIVATE_KEY'] = "6LcLVmEqAAAAAN4gcOy7OFDLJxwdGL8Ge5qTrAIB"
 app.config["SECRET_KEY"] = "163*%$uSfJLG^E"
+
+# Konfiguracja bazy danych
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///login_data.db'
+
+# Inicjalizacja SQLAlchemy
+db = SQLAlchemy(app)
+db.init_app(app)
+
+
+
+#Dodanie tabeli
+class Login(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    login = db.Column(db.String(50))
+    password = db.Column(db.String(50))
+
+with app.app_context():
+    db.create_all()
 
 class LoginForm(FlaskForm):
     username = StringField("Username", validators=[InputRequired("A username is required!")])
