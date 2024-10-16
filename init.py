@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, redirect
+from flask import Flask, render_template, url_for, redirect, request
 from flask_bootstrap import Bootstrap5
 from flask_wtf import FlaskForm, RecaptchaField
 from wtforms import StringField, PasswordField, SubmitField
@@ -6,6 +6,8 @@ from wtforms.validators import InputRequired
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from main_class import FireBase
+from random import randrange
 
 app = Flask(__name__)
 Bootstrap5(app)
@@ -20,6 +22,7 @@ login_menager = LoginManager()
 login_menager.init_app(app)
 login_menager.login_view = "login"
 
+choiced = FireBase()
 
 # Definicja modelu
 class User(UserMixin, db.Model):
@@ -55,6 +58,16 @@ def login():
 @login_required
 def dashboard():
     return render_template("dashboard.html")
+
+@app.route('/firebase')
+@login_required
+def firebase():
+    choice = request.args.get("request")
+    if choice == 'send':
+        choiced.publishing_data(randrange(0,100))
+    if choice == 'recieve':
+        choiced.getting_data_firebase()
+    return redirect(url_for('dashboard'))
 
 @app.route('/logout')
 @login_required

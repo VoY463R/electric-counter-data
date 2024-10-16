@@ -22,9 +22,7 @@ class GettingNumbers:
         self.max_width, self.max_height = 100, 100
         self.loading_templates()
         self.final_value = ""
-        self.db = firestore.client()
-        self.doc_ref = self.db.collection("CounterCollection").document()
-        self.collection_ref = self.db.collection("CounterCollection")
+
 
     def finding_digits(self):
         """
@@ -147,8 +145,11 @@ class GettingNumbers:
         return saved_value
             
 class FireBase:
-    def __init__(self, final_value):
+    def __init__(self, final_value = None):
         self.value = final_value
+        self.db = firestore.client()
+        self.doc_ref = self.db.collection("CounterCollection").document()
+        self.collection_ref = self.db.collection("CounterCollection")
 
     def publishing_data(self, value=None):
         """_summary_ Wysyłanie odczytanej liczby na serwer FireBase
