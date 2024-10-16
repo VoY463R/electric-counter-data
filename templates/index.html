@@ -4,7 +4,7 @@
 {% block title %}Home - My Website{% endblock %}
 {%block body %}
 <h1>Zdalny odczyt licznika elektrycznego</h1> <br>
-<form method="POST" action="{{ url_for('home')}}" novalidate>
+<form method="POST" action="{{ url_for('login')}}" novalidate>
     {{ form.hidden_tag() }} 
 
     {{ render_field(form.username) }}
