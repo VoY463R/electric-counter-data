@@ -48,12 +48,19 @@ def login():
         if user and check_password_hash(user.password, form.password.data):
             login_user(user)
             return redirect(url_for('dashboard'))
+        else: return "<h1>Błędne dane logowania</h1><a href = '/'>Wróć do strony logowania</a>", 401
     return render_template("index.html", form = form)
 
 @app.route('/dashboard', methods=["POST", "GET"])
 @login_required
 def dashboard():
-    return "Hello"
+    return render_template("dashboard.html")
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
 
 if __name__ == "__main__":
     app.run(debug=True)
