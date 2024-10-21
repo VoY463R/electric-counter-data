@@ -7,5 +7,6 @@
     <a href="{{ url_for('figure')}}" class="btn btn-danger m-2">Rysuj wykres</a>
     <a href="{{ url_for('logout') }}" class="btn btn-primary m-2">Logout</a>
 </div>
+<img src="{{ url_for('static', filename='chart.png')}}" alt="wykres">
 
 {% endblock %}
