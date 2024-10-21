@@ -2,8 +2,7 @@
 {% block title %}Home - My Website{% endblock %}
 {% block body %}
 
-<a href="{{ url_for('logout') }}" class="btn btn-primary m-1">Logout</a>
-<a href="{{ url_for('firebase', request = 'send') }}" class="btn btn-primary m-1">Wyślij dane do Firebase</a>
-<a href="{{ url_for('firebase', request = 'recieve')}}" class="btn btn-primary m-1">Odbierz dane z Firebase</a>
+<a href="{{ url_for('logout') }}" class="btn btn-primary position-absolute top-0 end-0 m-3">Logout</a>
+<a href="{{ url_for('firebase')}}" class="btn btn-primary m-2">Odbierz dane z Firebase</a>
 
 {% endblock %}

@@ -37,11 +37,6 @@ def load_user(user_id):
 # Konfiguracja bazy danych
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///login_data.db'
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 5dd949400f9fe1d867723203a3a82de1ae7578d3
 class LoginForm(FlaskForm):
     username = StringField("Username", validators=[InputRequired("A username is required!")])
     password = PasswordField("Password",validators=[InputRequired("A password is required!")])
@@ -67,11 +62,7 @@ def dashboard():
 @app.route('/firebase')
 @login_required
 def firebase():
-    choice = request.args.get("request")
-    if choice == 'send':
-        choiced.publishing_data(randrange(0,100))
-    if choice == 'recieve':
-        choiced.getting_data_firebase()
+    choiced.getting_data_firebase()
     return redirect(url_for('dashboard'))
 
 @app.route('/logout')
