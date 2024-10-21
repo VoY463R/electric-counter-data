@@ -13,4 +13,9 @@
   {{ form.recaptcha }}
   {{ form.submit(class="btn btn-primary")}}
 </form>
+{% if validate %}
+  <div class="alert alert-danger w-25 mt-1" role="alert">
+    Błędny login lub hasło
+  </div>
+{% endif %}
 {% endblock %}

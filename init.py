@@ -88,17 +88,15 @@ def create_plot():
 @app.route("/", methods=["POST", "GET"])
 def login():
     form = LoginForm()
+    not_validate = False
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user and check_password_hash(user.password, form.password.data):
             login_user(user)
             return redirect(url_for("dashboard"))
         else:
-            return (
-                "<h1>Błędne dane logowania</h1><a href = '/'>Wróć do strony logowania</a>",
-                401,
-            )
-    return render_template("index.html", form=form)
+            not_validate = True
+    return render_template("index.html", form=form, validate = not_validate)
 
 
 @app.route("/dashboard", methods=["POST", "GET"])
