@@ -171,13 +171,17 @@ class FireBase:
 
     def getting_data_firebase(self):
         """_summary_ Pobranie wszystkich danych z Firebase"""
+        dane = []
         try:
             docs = self.collection_ref.stream()
 
             for doc in docs:
                 print(f"Dokument ID: {doc.id}, Dane: {doc.to_dict()}")
+                dane.append(doc.to_dict())
         except:
             print("Błąd podczas pobierania danych z serwera FireBase")
+        finally:
+            return dane
 
 
 # img = cv.imread("licznik.jpg")

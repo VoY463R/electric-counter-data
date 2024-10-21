@@ -4,10 +4,11 @@ from flask_wtf import FlaskForm, RecaptchaField
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import InputRequired
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from main_class import FireBase
 from random import randrange
+import csv
 
 app = Flask(__name__)
 Bootstrap5(app)
@@ -62,7 +63,19 @@ def dashboard():
 @app.route('/firebase')
 @login_required
 def firebase():
-    choiced.getting_data_firebase()
+    dane = choiced.getting_data_firebase()
+    print(dane)
+    with open('dane.csv', 'w', newline='', encoding='utf-8') as plik_csv:
+        fieldnames = dane[0].keys() #Nagłówki oparte na kluczach pierwszego słownika
+        writer = csv.DictWriter(plik_csv, fieldnames=fieldnames)
+
+        # Zapisanie nagłówków
+        writer.writeheader()
+        
+        # Zapisanie wierszy (każdy słownik to jeden wiersz)
+        writer.writerows(dane)
+        
+    print("Dane zostały zapisane do pliku CSV.")
     return redirect(url_for('dashboard'))
 
 @app.route('/logout')

@@ -2,7 +2,9 @@
 {% block title %}Home - My Website{% endblock %}
 {% block body %}
 
-<a href="{{ url_for('logout') }}" class="btn btn-primary position-absolute top-0 end-0 m-3">Logout</a>
-<a href="{{ url_for('firebase')}}" class="btn btn-primary m-2">Odbierz dane z Firebase</a>
+<div class="d-flex justify-content-end p-3">
+    <a href="{{ url_for('firebase')}}" class="btn btn-primary m-2">Odbierz dane z Firebase</a>
+    <a href="{{ url_for('logout') }}" class="btn btn-primary m-2">Logout</a>
+</div>
 
 {% endblock %}
