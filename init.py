@@ -84,6 +84,7 @@ def create_plot():
     plt.savefig("static/chart.png", bbox_inches="tight")
     plt.close()
 
+data_saved = False
 
 @app.route("/", methods=["POST", "GET"])
 def login():
@@ -102,14 +103,16 @@ def login():
 @app.route("/dashboard", methods=["POST", "GET"])
 @login_required
 def dashboard():
-    return render_template("dashboard.html")
-
+    global data_saved
+    is_saved = data_saved
+    if data_saved:
+        data_saved = False
+    return render_template("dashboard.html", saved = is_saved)
 
 @app.route("/firebase")
 @login_required
 def firebase():
     dane = choiced.getting_data_firebase()
-    print(dane)
     with open("dane.csv", "w", newline="", encoding="utf-8") as plik_csv:
         fieldnames = dane[0].keys()  # Nagłówki oparte na kluczach pierwszego słownika
         writer = csv.DictWriter(plik_csv, fieldnames=fieldnames)
@@ -120,8 +123,9 @@ def firebase():
         # Zapisanie wierszy (każdy słownik to jeden wiersz)
         writer.writerows(dane)
 
-    print("Dane zostały zapisane do pliku CSV.")
-    return redirect(url_for("dashboard"))
+    global data_saved
+    data_saved = True
+    return redirect(url_for('dashboard'))
 
 
 @app.route("/figure")

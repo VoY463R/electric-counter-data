@@ -2,7 +2,12 @@
 {% block title %}Home - My Website{% endblock %}
 {% block body %}
 
-<div class="d-flex justify-content-end p-3">
+{% if saved %}
+<div class="alert alert-success" role="alert">
+    Dane zostały zapisane do pliku CSV
+</div>
+{% endif %}
+<div class="d-flex justify-content-end">
     <a href="{{ url_for('firebase')}}" class="btn btn-primary m-2">Odbierz dane z Firebase</a>
     <a href="{{ url_for('figure')}}" class="btn btn-danger m-2">Rysuj wykres</a>
     <a href="{{ url_for('logout') }}" class="btn btn-primary m-2">Logout</a>
