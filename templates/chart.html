@@ -1,12 +1,46 @@
-{% extends 'base.html' %}
-{% block title %}Home - My Website{% endblock %}
-{% block body %}
+{% extends 'base.html' %} {% block title %}Home - My Website{% endblock %} {%
+block body %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-6 d-flex align-items-start justify-content-start">
+      <img
+        src="{{ url_for('static', filename='chart.png')}}"
+        alt="wykres"
+        class="img-fluid"
+      />
+    </div>
 
-<div class="d-flex justify-content-end p-3">
-    <a href="{{ url_for('firebase')}}" class="btn btn-primary m-2">Odbierz dane z Firebase</a>
-    <a href="{{ url_for('figure')}}" class="btn btn-danger m-2">Rysuj wykres</a>
+    <div class="col-md-6 d-flex justify-content-end align-items-start">
+      <a href="{{ url_for('firebase')}}" class="btn btn-primary m-2"
+        >Odbierz dane z Firebase</a
+      >
+      <a href="{{ url_for('figure')}}" class="btn btn-danger m-2"
+        >Rysuj wykres</a
+      >
     <a href="{{ url_for('logout') }}" class="btn btn-primary m-2">Logout</a>
 </div>
-<img src="{{ url_for('static', filename='chart.png')}}" alt="wykres">
+  </div>
+  <div class="row">
+    <div class="col">
 
+      <form method="POST" action="{{ url_for('figure')}}" novalidate>
+        {{ form.hidden_tag() }}
+        <h2>Dostosowanie obszaru wyświetlania</h2>
+        <h4>Data i czas:</h4>
+        Od: {{ form.xlim_first }} Do: {{ form.xlim_end}} <br /><br />
+        <h4>Wartość [kWh]:</h4>
+        Od: {{ form.ylim_first }} Do: {{ form.ylim_end}} <br />
+        {{ form.generate(class="btn btn-success mt-3")}}
+      </form>
+      {% if is_lim == False %}
+      <div class="alert alert-danger mt-1 w-50" role="alert">
+        Błedny format daty lub wartości kWh
+      </div>
+      {% endif %}
+    </div>
+    <div class="col">
+      <h2>Zużyta energia w wyznaczonym okresie</h2>
+    </div>
+  </div>
+</div>
 {% endblock %}

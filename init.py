@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, redirect, request
+from flask import Flask, render_template, url_for, redirect, request, session
 from flask_bootstrap import Bootstrap5
 from flask_wtf import FlaskForm, RecaptchaField
 from wtforms import StringField, PasswordField, SubmitField
@@ -17,7 +17,13 @@ from main_class import FireBase
 from random import randrange
 import csv
 import pandas as pd
+import matplotlib
+matplotlib.use("Agg")
+
 import matplotlib.pyplot as plt
+from datetime import datetime
+from figure_class import Plot
+
 
 app = Flask(__name__)
 Bootstrap5(app)
@@ -60,34 +66,18 @@ class LoginForm(FlaskForm):
     )
     submit = SubmitField("Submit")
     # recaptcha = RecaptchaField()
-
-
-def create_plot():
-    try:
-        df = pd.read_csv("dane.csv")
-    except:
-        return False
-    df["Czas"] = pd.to_datetime(df["Czas"], format="%y-%m-%d %H:%M:%S")
-    df.sort_values("Czas", inplace=True)
-    print(df)
-    time = df["Czas"]
-    value = df["Odczytana wartosc"]
-    plt.figure(figsize=(10, 5))
-    plt.plot(time, value, marker="o")
-    plt.title("Wykres wartości w czasie (posortowane)")
-    plt.xlabel("Data i czas")
-    plt.ylabel("Wartość")
-    plt.xticks(rotation=45)
-    plt.grid(True)
-
-    # Zapisane wykresu jako obrazek
-    plt.savefig("static/chart.png", bbox_inches="tight")
-    plt.close()
-
-data_saved = False
+    
+class LimForm(FlaskForm):
+    xlim_first = StringField("Xlim_first", render_kw={"placeholder": "np. 22-10-2024"})
+    xlim_end = StringField("Xlim_end", render_kw={"placeholder": "np. 22-10-2024"})
+    ylim_first = StringField("Ylim_first", render_kw={"placeholder": "np. 4000"})
+    ylim_end = StringField("Ylim_end")
+    generate = SubmitField("Generuj")
+    # recaptcha = RecaptchaField()
 
 @app.route("/", methods=["POST", "GET"])
 def login():
+    session['data_saved'] = False
     form = LoginForm()
     not_validate = False
     if form.validate_on_submit():
@@ -97,17 +87,17 @@ def login():
             return redirect(url_for("dashboard"))
         else:
             not_validate = True
-    return render_template("index.html", form=form, validate = not_validate)
+    return render_template("index.html", form=form, validate=not_validate)
 
 
 @app.route("/dashboard", methods=["POST", "GET"])
 @login_required
 def dashboard():
-    global data_saved
-    is_saved = data_saved
+    data_saved = session['data_saved']
     if data_saved:
-        data_saved = False
-    return render_template("dashboard.html", saved = is_saved)
+        session['data_saved'] = False
+    return render_template("dashboard.html", saved=data_saved)
+
 
 @app.route("/firebase")
 @login_required
@@ -123,18 +113,38 @@ def firebase():
         # Zapisanie wierszy (każdy słownik to jeden wiersz)
         writer.writerows(dane)
 
-    global data_saved
-    data_saved = True
-    return redirect(url_for('dashboard'))
+    session['data_saved'] = True
+    return redirect(url_for("dashboard"))
 
 
-@app.route("/figure")
+@app.route("/figure", methods=["POST", "GET"])
 @login_required
 def figure():
-    chart = create_plot()
-    if chart == False:
-        return "<h1>Błąd przy odczycie pliku</h1><a href = '/dashboard'>Wróć do poprzedniej strony</a>"
-    return render_template("chart.html")
+    
+    form = LimForm()
+    try:
+        data = pd.read_csv("dane.csv")
+    except:
+        return render_template("dashboard.html", is_chart=False, form = form)
+    df = pd.DataFrame(data)
+    my_plot = Plot(df)
+    if form.validate_on_submit():
+        xlim = (my_plot.conv_time(form.xlim_first.data, form.xlim_end.data))
+        ylim = (my_plot.convert_to_int(form.ylim_first.data, form.ylim_end.data))
+        print(xlim)
+        print(ylim)
+        if xlim and ylim:
+            my_plot.limiation()
+            my_plot.saving()
+        else:
+            return render_template("chart.html", is_lim=False, form = form)
+    else:
+        if my_plot.draving_chart() == False:
+            return render_template("dashboard.html", is_chart=False, form = form)
+        my_plot.saving()
+
+           
+    return render_template("chart.html", form = form)
 
 
 @app.route("/logout")
