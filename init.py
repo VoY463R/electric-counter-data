@@ -120,7 +120,6 @@ def firebase():
 @app.route("/figure", methods=["POST", "GET"])
 @login_required
 def figure():
-    
     form = LimForm()
     try:
         data = pd.read_csv("dane.csv")
@@ -128,6 +127,7 @@ def figure():
         return render_template("dashboard.html", is_chart=False, form = form)
     df = pd.DataFrame(data)
     my_plot = Plot(df)
+
     if form.validate_on_submit():
         xlim = (my_plot.conv_time(form.xlim_first.data, form.xlim_end.data))
         ylim = (my_plot.convert_to_int(form.ylim_first.data, form.ylim_end.data))
@@ -136,6 +136,7 @@ def figure():
         if xlim and ylim:
             my_plot.limiation()
             my_plot.saving()
+            print(my_plot.limitation_values())
         else:
             return render_template("chart.html", is_lim=False, form = form)
     else:
