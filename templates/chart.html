@@ -17,12 +17,11 @@ block body %}
       <a href="{{ url_for('figure')}}" class="btn btn-danger m-2"
         >Rysuj wykres</a
       >
-    <a href="{{ url_for('logout') }}" class="btn btn-primary m-2">Logout</a>
-</div>
+      <a href="{{ url_for('logout') }}" class="btn btn-primary m-2">Logout</a>
+    </div>
   </div>
   <div class="row">
     <div class="col">
-
       <form method="POST" action="{{ url_for('figure')}}" novalidate>
         {{ form.hidden_tag() }}
         <h2>Dostosowanie obszaru wyświetlania</h2>
@@ -40,6 +39,11 @@ block body %}
     </div>
     <div class="col">
       <h2>Zużyta energia w wyznaczonym okresie</h2>
+      <br />
+      <h5>
+        Od {{ data['down_time'] }} do {{ data['up_time'] }} zużyto
+        <b>{{ data['up_time_value'] - data['down_time_value'] }} kWh</b>
+      </h5>
     </div>
   </div>
 </div>

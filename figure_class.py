@@ -23,6 +23,12 @@ class Plot:
             self.ax.set_ylabel("Wartość [kWh]")
             self.ax.tick_params(axis="x", rotation=45)
             self.ax.grid(True)
+            self.default_result = {
+                'up_time': self.time.iloc[-1],
+                'up_time_value': self.value.values[-1],
+                'down_time': self.time.iloc[0],
+                'down_time_value': self.value.values[0],
+                }
         except:
             return False
     
@@ -84,29 +90,54 @@ class Plot:
         plt.savefig("static/chart.png", bbox_inches="tight")
         
     def limitation_values(self):
+        results = {}
         if self.limitation_applied:
             self.limitation_applied = False
             if self.xlim[0] == None:
-                self.selecting_border_date(0)
+                results = self.selecting_border_data(0)
+                results.update({'down_time': self.time.iloc[0],'down_time_value': self.value.values[0]})
             elif self.xlim[1] == None:
-                self.selecting_border_date(1)
+                results = self.selecting_border_data(1)
+                results.update({'up_time': self.time.iloc[-1],'up_time_value': self.value.values[-1]})
             else:
-                self.selecting_border_date(2)
-        else:
-            return self.value.values[-1] - self.value.values[0]
+                results, results_second = self.selecting_border_data(2)
+                results.update(results_second)
+            print(results, 'jeden')
+            return results
         
-    def selecting_border_date(self, value):
+        else:
+            print('dwa')
+            return self.default_result
+        
+    def selecting_border_data(self, value):
         match value:
             case 0:
-                for i in range(len(self.time)):
-                    if self.time[i] <= self.xlim[1] <= self.time[i+1]:
-                        self.up_time_value = self.time[i]
-                        print(self.up_time_value)
+                if self.xlim[1] <= self.time.iloc[-1]:
+                    for i in range(len(self.time)):
+                        if self.time[i] <= self.xlim[1] <= self.time[i+1]:
+                            self.up_time = self.time[i]
+                            self.up_time_value = self.df[self.df['Czas'] == self.up_time]['Odczytana wartosc'].values[0]
+                            result = {
+                                'up_time': self.up_time,
+                                'up_time_value': self.up_time_value,
+                            }
+                            return result
+                else:
+                    return self.default_result
             case 1:
-                for i in range(len(self.time)):
-                    if self.time[i] <= self.xlim[0] <= self.time[i+1]:
-                        self.down_time_value = self.time[i+1]
-                        print(self.down_time_value)
+                if self.xlim[0] >= self.time.iloc[0]:
+                    for i in range(len(self.time)):
+                        if self.time[i] <= self.xlim[0] <= self.time[i+1]:
+                            self.down_time = self.time[i+1]
+                            self.down_time_value = self.df[self.df['Czas'] == self.down_time]['Odczytana wartosc'].values[0]
+                            result = {
+                                'down_time' : self.down_time,
+                                'down_time_value' : self.down_time_value
+                            }
+                            return result
+                else:
+                    return self.default_result
             case 2:
-                self.selecting_border_date(0)
-                self.selecting_border_date(1)
+                return self.selecting_border_data(0), self.selecting_border_data(1)
+
+            

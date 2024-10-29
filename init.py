@@ -127,25 +127,26 @@ def figure():
         return render_template("dashboard.html", is_chart=False, form = form)
     df = pd.DataFrame(data)
     my_plot = Plot(df)
-
+    default_usage_data = my_plot.default_result
     if form.validate_on_submit():
         xlim = (my_plot.conv_time(form.xlim_first.data, form.xlim_end.data))
         ylim = (my_plot.convert_to_int(form.ylim_first.data, form.ylim_end.data))
-        print(xlim)
-        print(ylim)
         if xlim and ylim:
             my_plot.limiation()
             my_plot.saving()
-            print(my_plot.limitation_values())
+            data = my_plot.limitation_values()
+            print('tutaj jesetm')
+            return render_template("chart.html",is_lim=True, form = form,  data = data)
         else:
-            return render_template("chart.html", is_lim=False, form = form)
+            print(default_usage_data)
+            return render_template("chart.html", is_lim=False, form = form, data = default_usage_data)
     else:
         if my_plot.draving_chart() == False:
             return render_template("dashboard.html", is_chart=False, form = form)
         my_plot.saving()
 
            
-    return render_template("chart.html", form = form)
+    return render_template("chart.html", form = form, data = default_usage_data)
 
 
 @app.route("/logout")
