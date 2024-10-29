@@ -102,11 +102,8 @@ class Plot:
             else:
                 results, results_second = self.selecting_border_data(2)
                 results.update(results_second)
-            print(results, 'jeden')
             return results
-        
         else:
-            print('dwa')
             return self.default_result
         
     def selecting_border_data(self, value):

@@ -6,3 +6,5 @@ instance/login_data.db
 licznik.jpg
 chart2.png
 __pycache__/
+saved_data.db
+default.db

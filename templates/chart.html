@@ -44,6 +44,8 @@ block body %}
         Od {{ data['down_time'] }} do {{ data['up_time'] }} zużyto
         <b>{{ data['up_time_value'] - data['down_time_value'] }} kWh</b>
       </h5>
+      <a href="{{ url_for('saving', down_time=data['down_time'], up_time=data['up_time'], used_elec=(data['up_time_value'] - data['down_time_value']))}}" class="btn btn-primary btn-lg ml-3">Zapisz zużycie</a>
+      <a href="{{ url_for('database')}}" class="btn btn-success btn-lg m-3">Wyświetl dane</a>
     </div>
   </div>
 </div>
