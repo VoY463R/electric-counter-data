@@ -32,6 +32,9 @@ def save_data_to_csv(data, filename="data.csv"):
         writer.writerows(data)
 
 def reset_data_saved(f):
+    """
+    Resetting the value of data_saved to False before calling the function 
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         session['data_saved'] = False
@@ -54,7 +57,7 @@ app.config["RECAPTCHA_PUBLIC_KEY"] = os.getenv("RECAPTCHA_PUBLIC_KEY")
 app.config["RECAPTCHA_PRIVATE_KEY"] = os.getenv("RECAPTCHA_PRIVATE_KEY")
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
-# Konfiguracja bazy danych
+# Database configuraction
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI")
 app.config["SQLALCHEMY_BINDS"] = {
     "primary": os.getenv("SQLALCHEMY_PRIMARY_BIND"),
@@ -83,6 +86,9 @@ with app.app_context():
 @app.route("/", methods=["POST", "GET"])
 @reset_data_saved
 def login():
+    """
+    Support for logging into the site.
+    """
     session["data_saved"] = False
     form = LoginForm()
     not_validate = False
@@ -106,6 +112,9 @@ def dashboard():
 @app.route("/firebase")
 @login_required
 def firebase():
+    """
+    Reading data from FireBase database
+    """
     data = firebase_instance.getting_data_firebase()
     save_data_to_csv(data)
     session["data_saved"] = True
@@ -115,6 +124,9 @@ def firebase():
 @app.route("/figure", methods=["POST", "GET"])
 @login_required
 def figure():
+    """
+    Display a graph of electricity consumption with options for selecting the appropriate range and saving the data to a database.
+    """
     form = LimForm()
     try:
         data = pd.read_csv("dane.csv")
@@ -151,6 +163,9 @@ def figure():
 @app.route("/saving")
 @login_required
 def saving():
+    """
+    Saving the data to the database.
+    """
     down_time, up_time, used_elec = parse_saving_request(request)
     if down_time and up_time:
         save_energy_data(down_time, up_time, used_elec)
@@ -182,6 +197,9 @@ def save_energy_data(down_time, up_time, used_elec):
 @app.route("/database")
 @login_required
 def database():
+    """
+    Display the entire database.
+    """
     usage_saved = DataSaved.query.all()
     return render_template("database.html", usage_saved=usage_saved)
 
@@ -189,22 +207,28 @@ def database():
 @app.route("/delete")
 @login_required
 def delete():
+    """
+    Delete the selected item from the database.
+    """
     id = request.args.get("id")
     data_to_delete = DataSaved.query.get_or_404(id)
     try:
         db.session.delete(data_to_delete)
         db.session.commit()
         return redirect(url_for("database"))
-    except:
-        return "There was an issue deleting your data"
+    except Exception as e:
+        logging.error(f"There was an issue deleting your data: {e}")
+        return redirect(url_for("database"))
 
 
 @app.route("/logout")
 @login_required
 def logout():
+    """
+    Logs the user out and takes him to the login page.
+    """
     logout_user()
     return redirect(url_for("login"))
-
 
 if __name__ == "__main__":
     app.run(debug=True)
