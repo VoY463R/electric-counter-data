@@ -21,7 +21,20 @@ from dotenv import load_dotenv
 import os
 from models import User, DataSaved, db
 from forms import LoginForm, LimForm
+import logging
+from functools import wraps
 
+# logging configuration
+logging.basicConfig(
+    level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+def reset_data_saved(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        session['data_saved'] = False
+        return f(*args, **kwargs)
+    return decorated_function
 
 app = Flask(__name__)
 Bootstrap5(app)
@@ -37,9 +50,9 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 # Konfiguracja bazy danych
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI")
 app.config["SQLALCHEMY_BINDS"] = {
-    'primary' : os.getenv("SQLALCHEMY_PRIMARY_BIND"),
-    'secondary' : os.getenv("SQLALCHEMY_SECONDARY_BIND")
-    }
+    "primary": os.getenv("SQLALCHEMY_PRIMARY_BIND"),
+    "secondary": os.getenv("SQLALCHEMY_SECONDARY_BIND"),
+}
 
 # Database initialization
 db.init_app(app)
@@ -50,16 +63,20 @@ login_menager = LoginManager()
 login_menager.init_app(app)
 login_menager.login_view = "login"
 
+
 @login_menager.user_loader
 def load_user(user_id):
     return db.session.get(User, user_id)
 
+
 with app.app_context():
     db.create_all()
 
+
 @app.route("/", methods=["POST", "GET"])
+@reset_data_saved
 def login():
-    session['data_saved'] = False
+    session["data_saved"] = False
     form = LoginForm()
     not_validate = False
     if form.validate_on_submit():
@@ -73,11 +90,10 @@ def login():
 
 
 @app.route("/dashboard", methods=["POST", "GET"])
+@reset_data_saved
 @login_required
 def dashboard():
-    data_saved = session['data_saved']
-    if data_saved:
-        session['data_saved'] = False
+    data_saved = session["data_saved"]
     return render_template("dashboard.html", saved=data_saved)
 
 
@@ -95,7 +111,7 @@ def firebase():
         # Zapisanie wierszy (każdy słownik to jeden wiersz)
         writer.writerows(dane)
 
-    session['data_saved'] = True
+    session["data_saved"] = True
     return redirect(url_for("dashboard"))
 
 
@@ -105,51 +121,63 @@ def figure():
     form = LimForm()
     try:
         data = pd.read_csv("dane.csv")
-    except:
-        return render_template("dashboard.html", is_chart=False, form = form)
+    except Exception as e:
+        logging.error(f"Error reading CSV: {e}")
+        return render_template("dashboard.html", is_chart=False, form=form)
     df = pd.DataFrame(data)
     my_plot = Plot(df)
     default_usage_data = my_plot.default_result
-    if form.validate_on_submit():
-        xlim = (my_plot.conv_time(form.xlim_first.data, form.xlim_end.data))
-        ylim = (my_plot.convert_to_int(form.ylim_first.data, form.ylim_end.data))
-        if xlim and ylim:
-            my_plot.limiation()
-            my_plot.saving()
-            data = my_plot.limitation_values()
-            return render_template("chart.html",is_lim=True, form = form,  data = data)
+    try:
+        if form.validate_on_submit():
+            xlim = my_plot.conv_time(form.xlim_first.data, form.xlim_end.data)
+            ylim = my_plot.convert_to_int(form.ylim_first.data, form.ylim_end.data)
+            if xlim and ylim:
+                my_plot.limiation()
+                my_plot.saving()
+                data = my_plot.limitation_values()
+                return render_template("chart.html", is_lim=True, form=form, data=data)
+            else:
+                return render_template(
+                    "chart.html", is_lim=False, form=form, data=default_usage_data
+                )
         else:
-            return render_template("chart.html", is_lim=False, form = form, data = default_usage_data)
-    else:
-        if my_plot.draving_chart() == False:
-            return render_template("dashboard.html", is_chart=False, form = form)
-        my_plot.saving()
+            if my_plot.draving_chart() == False:
+                return render_template("dashboard.html", is_chart=False, form=form)
+            my_plot.saving()
+    except Exception as e:
+        logging.error(f"Error processing figure: {e}")
+        return render_template("dashboard.html", is_chart=False, form=form)
 
-           
-    return render_template("chart.html", form = form, data = default_usage_data)
+    return render_template("chart.html", form=form, data=default_usage_data)
 
-@app.route('/saving')
+
+@app.route("/saving")
 @login_required
 def saving():
-    down_time = datetime.strptime(request.args.get('down_time'), '%Y-%m-%d %H:%M:%S')
-    up_time = datetime.strptime(request.args.get('up_time'), '%Y-%m-%d %H:%M:%S')
-    used_elec = request.args.get('used_elec')
-    with app.app_context():
-        try:
-            new_event = DataSaved(low_date=down_time, high_date=up_time, used_energy=used_elec)
-            db.session.add(new_event)
-            db.session.commit()
-        except:
-            redirect(url_for("figure"))
-    return redirect(url_for("figure"))
+    try:
+        down_time = datetime.strptime(request.args.get("down_time"), "%Y-%m-%d %H:%M:%S")
+        up_time = datetime.strptime(request.args.get("up_time"), "%Y-%m-%d %H:%M:%S")
+        used_elec = request.args.get("used_elec")
+        with app.app_context():
+                new_event = DataSaved(
+                    low_date=down_time, high_date=up_time, used_energy=used_elec
+                )
+                db.session.add(new_event)
+                db.session.commit()
+        redirect(url_for("figure"))
+    except Exception as e:
+        logging.error(f"Error saving data: {e}")
+        return redirect(url_for("figure", error="There was an issue saving your data."))
 
-@app.route('/database')
+
+@app.route("/database")
 @login_required
 def database():
     usage_saved = DataSaved.query.all()
-    return render_template("database.html", usage_saved = usage_saved)
+    return render_template("database.html", usage_saved=usage_saved)
 
-@app.route('/delete')
+
+@app.route("/delete")
 @login_required
 def delete():
     id = request.args.get("id")
@@ -157,10 +185,10 @@ def delete():
     try:
         db.session.delete(data_to_delete)
         db.session.commit()
-        return redirect(url_for('database'))
+        return redirect(url_for("database"))
     except:
         return "There was an issue deleting your data"
-    
+
 
 @app.route("/logout")
 @login_required

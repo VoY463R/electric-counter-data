@@ -64,7 +64,6 @@ class Plot:
             self.xlim = (xlim_first, xlim_end)
             return self.xlim
         except:
-            print("Niepoprawny format daty")
             return False
 
     def limiation(self):
