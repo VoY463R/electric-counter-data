@@ -9,3 +9,4 @@ __pycache__/
 saved_data.db
 default.db
 electric-data-bcc46-firebase-adminsdk-90nfi-09810ff75f.json
+.env

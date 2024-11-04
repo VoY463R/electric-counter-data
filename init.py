@@ -23,19 +23,24 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from datetime import datetime
 from figure_class import Plot
+from dotenv import load_dotenv
+import os
 
 
 app = Flask(__name__)
 Bootstrap5(app)
-app.config["RECAPTCHA_PUBLIC_KEY"] = "6LcLVmEqAAAAAEMAeioWuCCppHqLuMRK4drkcbTx"
-app.config["RECAPTCHA_PRIVATE_KEY"] = "6LcLVmEqAAAAAN4gcOy7OFDLJxwdGL8Ge5qTrAIB"
-app.config["SECRET_KEY"] = "163*%$uSfJLG^E"
+
+# Load environment variables from the .env file
+load_dotenv()
+app.config["RECAPTCHA_PUBLIC_KEY"] = os.getenv("RECAPTCHA_PUBLIC_KEY")
+app.config["RECAPTCHA_PRIVATE_KEY"] = os.getenv("RECAPTCHA_PRIVATE_KEY")
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
 # Konfiguracja bazy danych
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///default.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI")
 app.config["SQLALCHEMY_BINDS"] = {
-    'primary' : "sqlite:///login_data.db",
-    'secondary' : "sqlite:///saved_data.db"
+    'primary' : os.getenv("SQLALCHEMY_PRIMARY_BIND"),
+    'secondary' : os.getenv("SQLALCHEMY_SECONDARY_BIND")
     }
 
 db = SQLAlchemy(app)
