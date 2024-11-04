@@ -1,37 +1,35 @@
 from flask import Flask, render_template, url_for, redirect, request, session, jsonify
 from flask_bootstrap import Bootstrap5
-from flask_wtf import FlaskForm, RecaptchaField
+from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import InputRequired
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import check_password_hash
 from flask_login import (
     LoginManager,
-    UserMixin,
     login_user,
     login_required,
     logout_user,
-    current_user,
 )
 from main_class import FireBase
-from random import randrange
 import csv
 import pandas as pd
 import matplotlib
-matplotlib.use("Agg")
-
 import matplotlib.pyplot as plt
 from datetime import datetime
 from figure_class import Plot
 from dotenv import load_dotenv
 import os
+from models import User, DataSaved, db
+from forms import LoginForm, LimForm
 
 
 app = Flask(__name__)
 Bootstrap5(app)
+matplotlib.use("Agg")
 
 # Load environment variables from the .env file
 load_dotenv()
+
 app.config["RECAPTCHA_PUBLIC_KEY"] = os.getenv("RECAPTCHA_PUBLIC_KEY")
 app.config["RECAPTCHA_PRIVATE_KEY"] = os.getenv("RECAPTCHA_PRIVATE_KEY")
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
@@ -43,48 +41,18 @@ app.config["SQLALCHEMY_BINDS"] = {
     'secondary' : os.getenv("SQLALCHEMY_SECONDARY_BIND")
     }
 
-db = SQLAlchemy(app)
+# Database initialization
+db.init_app(app)
+
 choiced = FireBase()
 
 login_menager = LoginManager()
 login_menager.init_app(app)
 login_menager.login_view = "login"
 
-# Definicja modelu
-class User(UserMixin, db.Model):
-    __bind_key__ = 'primary'
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(120), unique=True, nullable=False)
-
-class DataSaved(db.Model):
-    __bind_key__ = 'secondary'
-    id = db.Column(db.Integer, primary_key = True)
-    low_date = db.Column(db.DateTime, nullable = False)
-    high_date = db.Column(db.DateTime, nullable = False)
-    used_energy = db.Column(db.Integer, nullable = False)
-
 @login_menager.user_loader
 def load_user(user_id):
     return db.session.get(User, user_id)
-
-class LoginForm(FlaskForm):
-    username = StringField(
-        "Username", validators=[InputRequired("A username is required!")]
-    )
-    password = PasswordField(
-        "Password", validators=[InputRequired("A password is required!")]
-    )
-    submit = SubmitField("Submit")
-    # recaptcha = RecaptchaField()
-    
-class LimForm(FlaskForm):
-    xlim_first = StringField("Xlim_first", render_kw={"placeholder": "np. 22-10-2024"})
-    xlim_end = StringField("Xlim_end", render_kw={"placeholder": "np. 22-10-2024"})
-    ylim_first = StringField("Ylim_first", render_kw={"placeholder": "np. 4000"})
-    ylim_end = StringField("Ylim_end")
-    generate = SubmitField("Generuj")
-    # recaptcha = RecaptchaField()
 
 with app.app_context():
     db.create_all()
@@ -96,7 +64,6 @@ def login():
     not_validate = False
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
-        print(user)
         if user and check_password_hash(user.password, form.password.data):
             login_user(user)
             return redirect(url_for("dashboard"))

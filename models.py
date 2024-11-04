@@ -1,0 +1,17 @@
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+
+db = SQLAlchemy()
+
+class User(UserMixin, db.Model):
+    __bind_key__ = 'primary'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(120), unique=True, nullable=False)
+
+class DataSaved(db.Model):
+    __bind_key__ = 'secondary'
+    id = db.Column(db.Integer, primary_key = True)
+    low_date = db.Column(db.DateTime, nullable = False)
+    high_date = db.Column(db.DateTime, nullable = False)
+    used_energy = db.Column(db.Integer, nullable = False)
