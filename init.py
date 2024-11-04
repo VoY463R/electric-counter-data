@@ -24,10 +24,12 @@ from forms import LoginForm, LimForm
 import logging
 from functools import wraps
 
-# logging configuration
-logging.basicConfig(
-    level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+def save_data_to_csv(data, filename="data.csv"):
+    with open(filename, "w", newline="", encoding="utf-8") as plik_csv:
+        fieldnames = data[0].keys()
+        writer = csv.DictWriter(plik_csv, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(data)
 
 def reset_data_saved(f):
     @wraps(f)
@@ -35,6 +37,11 @@ def reset_data_saved(f):
         session['data_saved'] = False
         return f(*args, **kwargs)
     return decorated_function
+
+# Logging configuration
+logging.basicConfig(
+    level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s")
+
 
 app = Flask(__name__)
 Bootstrap5(app)
@@ -57,7 +64,8 @@ app.config["SQLALCHEMY_BINDS"] = {
 # Database initialization
 db.init_app(app)
 
-choiced = FireBase()
+# Initialization FireBase
+firebase_instance = FireBase()
 
 login_menager = LoginManager()
 login_menager.init_app(app)
@@ -71,7 +79,6 @@ def load_user(user_id):
 
 with app.app_context():
     db.create_all()
-
 
 @app.route("/", methods=["POST", "GET"])
 @reset_data_saved
@@ -96,21 +103,11 @@ def dashboard():
     data_saved = session["data_saved"]
     return render_template("dashboard.html", saved=data_saved)
 
-
 @app.route("/firebase")
 @login_required
 def firebase():
-    dane = choiced.getting_data_firebase()
-    with open("dane.csv", "w", newline="", encoding="utf-8") as plik_csv:
-        fieldnames = dane[0].keys()  # Nagłówki oparte na kluczach pierwszego słownika
-        writer = csv.DictWriter(plik_csv, fieldnames=fieldnames)
-
-        # Zapisanie nagłówków
-        writer.writeheader()
-
-        # Zapisanie wierszy (każdy słownik to jeden wiersz)
-        writer.writerows(dane)
-
+    data = firebase_instance.getting_data_firebase()
+    save_data_to_csv(data)
     session["data_saved"] = True
     return redirect(url_for("dashboard"))
 
@@ -154,21 +151,33 @@ def figure():
 @app.route("/saving")
 @login_required
 def saving():
-    try:
-        down_time = datetime.strptime(request.args.get("down_time"), "%Y-%m-%d %H:%M:%S")
-        up_time = datetime.strptime(request.args.get("up_time"), "%Y-%m-%d %H:%M:%S")
-        used_elec = request.args.get("used_elec")
-        with app.app_context():
-                new_event = DataSaved(
-                    low_date=down_time, high_date=up_time, used_energy=used_elec
-                )
-                db.session.add(new_event)
-                db.session.commit()
-        redirect(url_for("figure"))
-    except Exception as e:
-        logging.error(f"Error saving data: {e}")
-        return redirect(url_for("figure", error="There was an issue saving your data."))
+    down_time, up_time, used_elec = parse_saving_request(request)
+    if down_time and up_time:
+        save_energy_data(down_time, up_time, used_elec)
+    return redirect(url_for("figure"))
 
+def parse_saving_request(req):
+    """
+    Parses the data from the requests and returns it in the appropriate format
+    """
+    try:
+        down_time = datetime.strptime(req.args.get("down_time"), "%Y-%m-%d %H:%M:%S")
+        up_time = datetime.strptime(req.args.get("up_time"), "%Y-%m-%d %H:%M:%S")
+        used_elec = req.args.get("used_elec")
+        return down_time, up_time, used_elec
+    except ValueError as e:
+        logging.error(f"Conversion data error {e}")
+        return None, None, None
+    
+def save_energy_data(down_time, up_time, used_elec):
+    """Saves energy consumption data to a database."""
+    with app.app_context():
+        try:
+            new_event = DataSaved(low_date=down_time, high_date=up_time, used_energy=used_elec)
+            db.session.add(new_event)
+            db.session.commit()
+        except Exception as e:
+            print(f"Error saving data: {e}")
 
 @app.route("/database")
 @login_required

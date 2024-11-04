@@ -17,7 +17,6 @@ class GettingNumbers:
         self.image = img
         self.matched_digits_with_positions = []
         self.scale_percent = 30
-        # Minimalny i maksymalny rozmiar konturów cyfr
         self.min_width, self.min_height = 10, 30
         self.max_width, self.max_height = 100, 100
         self.loading_templates()
@@ -26,11 +25,9 @@ class GettingNumbers:
 
     def finding_digits(self):
         """
-        Metoda odpowiedzialna za wyszukanie 7-segmentowych cyfr ze zdjęcia
-        zwracająca zdjęcie z odczytanymi cyframi oraz ich umiejscowieniem.
+        The method responsible for finding 7-segment digits from a photo returning a photo with the read digits and their location.
         """
 
-        # Zdefiniowanie nowych wymiarów zdjęcia
         width = int(self.image.shape[1] * self.scale_percent / 100)
         height = int(self.image.shape[0] * self.scale_percent / 100)
         new_size = (width, height)
