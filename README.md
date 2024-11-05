@@ -7,7 +7,8 @@ The project is used to remotely monitor the status of electricity consumption gi
 ## Features
 - Reads numbers from analog electric meters using OCR (OpenCV)
 - Saves data to a Firebase database in real time.
-- Provides data visualization and history tracking.
+- Downloads data from Firebase database.
+- Provides data visualization, data range manipulation and history tracking.
 
 ## Technologies
 - Python
@@ -51,7 +52,7 @@ SQLALCHEMY_DATABASE_URI=your_database_uri
 ```bash
 python init.py
 ```
-2. Access the app at http://127.0.0.1:5000
+2. Access the app at `http://127.0.0.1:5000`
 
 ## Issues & Contribution
 Contributions are welcome! Please open an issue or submit a pull request if you'd like to contribute.
