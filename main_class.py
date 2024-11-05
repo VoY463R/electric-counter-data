@@ -11,6 +11,9 @@ cred = credentials.Certificate(
     "electric-data-bcc46-firebase-adminsdk-90nfi-09810ff75f.json")
 firebase_admin.initialize_app(cred)
 
+# Logging configuration
+logging.basicConfig(
+    level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s")
 
 class GettingNumbers:
     def __init__(self, img):
@@ -169,4 +172,3 @@ class FireBase:
             logging.error(f"Error while downloading data from FireBase server {e}")
         finally:
             return data
-
