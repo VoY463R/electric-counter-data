@@ -53,6 +53,5 @@ python init.py
 ```
 2. Access the app at http://127.0.0.1:5000
 
-```markdown
 ## Issues & Contribution
 Contributions are welcome! Please open an issue or submit a pull request if you'd like to contribute.
