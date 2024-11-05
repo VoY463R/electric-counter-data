@@ -24,13 +24,6 @@ from forms import LoginForm, LimForm
 import logging
 from functools import wraps
 
-def save_data_to_csv(data, filename="data.csv"):
-    with open(filename, "w", newline="", encoding="utf-8") as plik_csv:
-        fieldnames = data[0].keys()
-        writer = csv.DictWriter(plik_csv, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(data)
-
 def reset_data_saved(f):
     """
     Resetting the value of data_saved to False before calling the function 
@@ -121,6 +114,13 @@ def firebase():
     return redirect(url_for("dashboard"))
 
 
+def save_data_to_csv(data, filename="data.csv"):
+    with open(filename, "w", newline="", encoding="utf-8") as plik_csv:
+        fieldnames = data[0].keys()
+        writer = csv.DictWriter(plik_csv, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(data)
+
 @app.route("/figure", methods=["POST", "GET"])
 @login_required
 def figure():
@@ -173,7 +173,7 @@ def saving():
 
 def parse_saving_request(req):
     """
-    Parses the data from the requests and returns it in the appropriate format
+    Parses the data from the requests and returns it in the appropriate format.
     """
     try:
         down_time = datetime.strptime(req.args.get("down_time"), "%Y-%m-%d %H:%M:%S")

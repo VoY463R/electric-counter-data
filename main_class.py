@@ -5,10 +5,10 @@ import json
 from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials, firestore
+import logging
 
 cred = credentials.Certificate(
-    "electric-data-bcc46-firebase-adminsdk-90nfi-09810ff75f.json"
-)
+    "electric-data-bcc46-firebase-adminsdk-90nfi-09810ff75f.json")
 firebase_admin.initialize_app(cred)
 
 
@@ -32,12 +32,11 @@ class GettingNumbers:
         height = int(self.image.shape[0] * self.scale_percent / 100)
         new_size = (width, height)
 
-        # Zmiana rozmiaru obrazu
         original_cropped = cv.resize(self.image, new_size, interpolation=cv.INTER_AREA)[
             300:400, 480:700
         ]
 
-        # Konwersja na odcienie szarości
+        ## Conversion to shades of gray
         gray_masked_image = cv.cvtColor(original_cropped, cv.COLOR_BGR2GRAY)
 
         # Threshold
@@ -45,11 +44,11 @@ class GettingNumbers:
             gray_masked_image, 100, 255, cv.THRESH_BINARY_INV
         )
 
-        # Zastosowanie dylacji, aby połączyć segmenty cyfr
+        # Use of dilation to connect segments of digits
         kernel = np.ones((3, 3), np.uint8)
         dilated_image = cv.dilate(thresh_image, kernel, iterations=1)
 
-        # Znalezienie kontur
+        # Finding the contours
         contours, _ = cv.findContours(
             dilated_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE
         )
@@ -57,18 +56,18 @@ class GettingNumbers:
         for contour in contours:
             x, y, w, h = cv.boundingRect(contour)
 
-            # Filtrujemy kontury według rozmiaru
+            # Filter outlines by size
             if (
                 self.min_width < w < self.max_width
                 and self.min_height < h < self.max_height
             ):
-                # Wyciągamy region z konturem (ROI)
+                # We pull out the region with the contour (ROI)
                 contour_roi = thresh_image[y : y + h, x : x + w]
 
-                # Dopasowanie szablonu i identyfikacja cyfry
+                # Template matching and digit identification
                 matched_digit = self.match_digit(contour_roi)
 
-                # Wyświetlamy cyfrę i rysujemy prostokąt
+                # Display a number and draw a rectangle
                 if matched_digit is not None:
                     self.matched_digits_with_positions.append((matched_digit, x))
                     cv.putText(
@@ -89,26 +88,21 @@ class GettingNumbers:
         return original_cropped
 
     def match_digit(self, contour_roi):
-        """_summary_
-
+        """The method responsible for matching the number seen in the picture using the method of least squares.
         Args:
-            contour_roi (_type_): region z konturem analizowanej liczby
-
-        Returns:
-            _type_: Metoda odpowiedzialna za dobieranie liczby widocznej na zdjęciu z wykorzystaniem
-            metody najmniejszych kwadratów
+            contour_roi (_type_): region with the contour of the analyzed number
         """
         best_match = None
         best_score = float("inf")
 
-        # Przeprowadź dopasowanie do każdej cyfry
+        # Conduct a match for each digit
         for digit, template in self.templates.items():
-            # Zmień rozmiar szablonu do wielkości regionu konturu
+            # Resize the template to the size of the outline region
             resized_template = cv.resize(
                 template, (contour_roi.shape[1], contour_roi.shape[0])
             )
 
-            # Dopasowanie szablonu (używamy metody TM_SQDIFF, bo chcemy minimalnej różnicy)
+            # Template matching (we use the TM_SQDIFF method because we want minimal difference)
             result = cv.matchTemplate(contour_roi, resized_template, cv.TM_SQDIFF)
             score = np.min(result)
 
@@ -118,21 +112,20 @@ class GettingNumbers:
 
         return best_match
 
-    # Wczytaj szalbony cyfr
     def loading_templates(self):
-        """_summary_ Załadowanie szablonu z 7-segmentowymi cyframi w zakresie 0-9"""
+        """Loading a template with 7-segment digits in the range 0-9"""
         self.templates = {}
         for i in range(10):
             digit = cv.imread(f"digits/{i}.jpg", 0)
+            if digit is None:
+                logging.error(f"Template for digit {i} not found.")
             inversted_image = cv.bitwise_not(digit)
             self.templates[i] = inversted_image
 
-    # Utworzenie zmiennej final_value zawierającą odczytane dane
     def final_value_func(self, matched_digits_with_positions):
-        """Metoda zwracająca końcowe cyfry uporządkowane w takiej samej kolejności jak na zdjęciu
-
+        """Method that returns the final digits ordered in the same order as in the image
         Args:
-            matched_digits_with_positions (_list_): Lista dopasowanych liczb ze zdjęcia wraz z wartością koordynaty x np. (digit=100, x=20)
+            matched_digits_with_positions (_list_): List of matched numbers from the photo along with the value of the coordinate x, e.g. (digit=100, x=20)
         """
         final_list = [digit[0] for digit in sorted(matched_digits_with_positions, key=lambda x: x[1])]
         self.final_value = "".join(map(str, final_list))
@@ -149,38 +142,31 @@ class FireBase:
         self.collection_ref = self.db.collection("CounterCollection")
 
     def publishing_data(self, value=None):
-        """_summary_ Wysyłanie odczytanej liczby na serwer FireBase
+        """Sending the read number to the FireBase server.
 
         Args:
-            value (_type_, optional): _description_. Wartość do wysłania. Domyślnie odczytana wartość ze zdjęcia
+            value (_type_, optional): Value to be sent. Default value read from the photo.
         """
         if value is None:
             value = self.value
         timestamp = datetime.now().strftime("%y-%m-%d %H:%M:%S")
-        message = {"Odczytana wartosc": value, "Czas": timestamp, "Status": "ok"}
+        message = {"Readed Value": value, "Time": timestamp, "Status": "ok"}
         try:
             self.doc_ref.set(message)
-            print("Document ID:", self.doc_ref.id)
-            print("Wysyłanie zakończone powodzeniem")
-        except:
-            print("Błąd podczas wysyłania danych na serwer FireBase")
+            logging.info("Sending successfully completed. Document ID: %s", self.doc_ref.id)
+        except Exception as e:
+            logging.error(f"Error when sending data to FireBase server: {e}")
 
 
     def getting_data_firebase(self):
-        """_summary_ Pobranie wszystkich danych z Firebase"""
-        dane = []
+        """Downloading all data from Firebase"""
+        data = []
         try:
             docs = self.collection_ref.stream()
-
             for doc in docs:
-                dane.append(doc.to_dict())
-        except:
-            print("Błąd podczas pobierania danych z serwera FireBase")
+                data.append(doc.to_dict())
+        except Exception as e:
+            logging.error(f"Error while downloading data from FireBase server {e}")
         finally:
-            return dane
+            return data
 
-
-# img = cv.imread("licznik.jpg")
-
-# # Zakończenie wyświetlania po wciśnięciu dowolnego klawisza
-# cv.waitKey(0)
