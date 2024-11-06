@@ -39,8 +39,10 @@ pip install -r requirements.txt
 ```
 4. Configure environment variables: Create a .env file with the necessary configuration:
 ```bash
-SECRET_KEY=your_secret_key
+SECRET_KEY=163*%$uSfJLG^E
 SQLALCHEMY_DATABASE_URI=your_database_uri
+SQLALCHEMY_PRIMARY_BIND=your_primary_bind
+SQLALCHEMY_SECONDARY_BIND=your_secondary_bind
 ```
 5. Set up Firebase credentials:
 - Download your Firebase credentials JSON file.
