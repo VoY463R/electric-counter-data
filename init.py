@@ -68,6 +68,7 @@ login_menager.init_app(app)
 login_menager.login_view = "login"
 
 
+
 @login_menager.user_loader
 def load_user(user_id):
     return db.session.get(User, user_id)
@@ -87,7 +88,7 @@ def login():
     not_validate = False
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
-        if user and check_password_hash(user.password, form.password.data):
+        if user and user.password == form.password.data:
             login_user(user)
             return redirect(url_for("dashboard"))
         else:
@@ -115,9 +116,9 @@ def firebase():
 
 
 def save_data_to_csv(data, filename="data.csv"):
-    with open(filename, "w", newline="", encoding="utf-8") as plik_csv:
+    with open(filename, "w", newline="", encoding="utf-8") as csv_file:
         fieldnames = data[0].keys()
-        writer = csv.DictWriter(plik_csv, fieldnames=fieldnames)
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(data)
 
@@ -129,7 +130,7 @@ def figure():
     """
     form = LimForm()
     try:
-        data = pd.read_csv("dane.csv")
+        data = pd.read_csv("data.csv")
     except Exception as e:
         logging.error(f"Error reading CSV: {e}")
         return render_template("dashboard.html", is_chart=False, form=form)
